@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<addon addon_id="ThemeHouse_AutoWarning" title="[⌂] Automatic Warnings" version_string="1.0.3b" version_id="1447261019" url="http://xf.themehouse.io" install_callback_class="ThemeHouse_Install" install_callback_method="install" uninstall_callback_class="ThemeHouse_Install" uninstall_callback_method="uninstall">
+  <admin_navigation/>
+  <admin_permissions/>
+  <admin_style_properties/>
+  <admin_templates>
+    <template title="th_auto_warning_add_autowarning"><![CDATA[<xen:title>{xen:if $autoWarning.auto_warning_id, '{xen:phrase th_edit_automatic_warning_autowarning}', '{xen:phrase th_create_new_automatic_warning_autowarning}'}</xen:title>
+
+<xen:if is="{$autoWarning.auto_warning_id}">
+	<xen:navigation>
+		<xen:breadcrumb href="{xen:adminlink warnings}#_auto-{$autoWarning.auto_warning_id}">{$autoWarning.title}</xen:breadcrumb>
+	</xen:navigation>
+</xen:if>
+
+<xen:require js="js/xenforo/form_filler.js" />
+<xen:require js="js/themehouse/autowarning/word_option.js" />
+
+<xen:form action="{xen:adminlink warnings/auto/save, $autoWarning}" data-form-filler-url="{xen:adminlink warnings/auto/add, '', 'fill=1'}" class="AutoValidator" data-redirect="on">
+	
+	<ul class="tabs Tabs" data-panes="#autoWarningPanes > li">
+		<li class="active"><a>{xen:phrase warning_information}</a></li>
+		<li><a>{xen:phrase member_notification}</a></li>
+		<li><a>{xen:phrase content_action}</a></li>
+		<li><a>{xen:phrase th_text_criteria_autowarning}</a></li>
+		<li><a>{xen:phrase user_criteria}</a></li>
+		<li><a>{xen:phrase custom_userfield_criteria}</a></li>
+	</ul>
+
+	<ul id="autoWarningPanes">
+		<li>
+			<xen:radiounit label="{xen:phrase warning_type}:" name="warning_definition_id">
+				<xen:foreach loop="$warnings" value="$warning">
+					<xen:option class="FormFiller" value="{$warning.warning_definition_id}" label="{$warning.title}" selected="{$autoWarning.warning_definition_id} == {$warning.warning_definition_id}" />
+				</xen:foreach>
+				<xen:option value="1" selected="!{$autoWarning.warning_definition_id}" class="FormFiller" value="0" id="customWarning" label="{xen:phrase custom_warning}:">
+					<xen:disabled>
+						<xen:textbox name="title" value="{$autoWarning.title}" placeholder="{xen:phrase custom_warning}..." maxlength="255" />
+					</xen:disabled>
+				</xen:option>
+			</xen:radiounit>
+			
+			<fieldset>
+				<xen:checkboxunit label="{xen:phrase warning_points}:">
+					<xen:option value="1" selected="{$autoWarning.points}" name="points_enable" label="{xen:phrase apply_warning_points}">
+						<xen:disabled>
+							<xen:spinbox name="points" value="{$autoWarning.points}" min="0" />
+						</xen:disabled>
+					</xen:option>
+				</xen:checkboxunit>
+				
+				<xen:checkboxunit label="{xen:phrase points_expiry}:">
+					<xen:option value="other" selected="{$autoWarning.expiry_value}" name="expiry_enable" label="{xen:phrase points_expire_after}:">
+						<xen:disabled>
+							<xen:spinbox name="expiry_value" value="{$autoWarning.expiry_value}" min="0" />
+							<xen:select name="expiry_unit" value="{$autoWarning.expiry_unit}"
+								inputclass="autoSize"
+							>
+								<xen:option value="days">{xen:phrase days}</xen:option>
+								<xen:option value="weeks">{xen:phrase weeks}</xen:option>
+								<xen:option value="months">{xen:phrase months}</xen:option>
+								<xen:option value="years">{xen:phrase years}</xen:option>
+							</xen:select>
+						</xen:disabled>
+					</xen:option>
+				</xen:checkboxunit>
+			</fieldset>
+				
+			<fieldset>
+				<xen:textboxunit label="{xen:phrase notes}:" name="notes" rows="2" class="Elastic" explain="{xen:phrase this_will_not_be_shown_to_member_receiving_warning}" value="{$autoWarning.notes}" />
+			</fieldset>
+		</li>
+		
+		
+		<li>
+			<xen:textboxunit label="{xen:phrase th_warn_as_user_autowarning}:" name="username" value="{$autoWarning.username}" inputclass="quickSearchText AutoComplete AcSingle" placeholder="{xen:phrase user_name}..." type="search" results="5" />
+
+			<fieldset>
+				<xen:checkboxunit label="{xen:phrase member_notification}:" explain="{xen:phrase you_may_use_placeholders_to_dynamically_insert_warning}">
+					<xen:option value="1" selected="{$autoWarning.conversationTitle} != ''" name="conversation_enable" label="{xen:phrase start_conversation}:">
+						<xen:disabled>
+							<xen:textbox name="conversation_title" value="{$autoWarning.conversationTitle}" placeholder="{xen:phrase conversation_title}..." />
+							<xen:textbox label="{xen:phrase message}:" name="conversation_message" class="Elastic" rows="2" value="{$autoWarning.conversationMessage}" />
+							<xen:checkbox>
+								<xen:option name="open_invite" value="1" label="{xen:phrase allow_anyone_in_conversation_to_invite_others}" selected="{$autoWarning.open_invite}" />
+								<xen:option name="conversation_locked" value="1" label="{xen:phrase lock_conversation_no_responses_will_be_allowed}" selected="{$autoWarning.conversation_locked}" />
+							</xen:checkbox>
+						</xen:disabled>
+					</xen:option>
+				</xen:checkboxunit>
+			</fieldset>
+		</li>
+		
+		<li>
+			<xen:radiounit label="{xen:phrase content_action}:" name="content_action" value="{$autoWarning.content_action}">
+				<xen:option value="" label="{xen:phrase do_nothing}" />
+				<xen:option value="delete_content" label="{xen:phrase delete_the_content}">
+					<xen:disabled>
+						<xen:textbox name="delete_reason" placeholder="{xen:phrase reason_for_deletion}" value="{$autoWarning.deleteReason}" />
+					</xen:disabled>
+				</xen:option>
+				<xen:option value="public_warning" label="{xen:phrase post_public_warning}:">
+					<xen:disabled>
+						<xen:textbox name="public_warning" placeholder="{xen:phrase public_warning_text}" value="{$autoWarning.publicWarning}" />
+					</xen:disabled>
+				</xen:option>
+			</xen:radiounit>
+		</li>
+
+		<li>
+			<xen:checkboxunit label="{xen:phrase th_apply_to_content_types_autowarning}:" name="content_types">
+				<xen:option value="post" selected="in_array('post', {$autoWarning.contentTypes})" label="{xen:phrase post}" />
+				<xen:option value="profile_post" selected="in_array('profile_post', {$autoWarning.contentTypes})" label="{xen:phrase profile_post}" />
+			</xen:checkboxunit>
+
+			<fieldset>
+				<xen:checkboxunit label="{xen:phrase content}:">
+					<xen:option name="content_criteria[contains_links][rule]" value="contains_links" label="{xen:phrase th_content_contains_at_least_x_links_autowarning}:" selected="{$autoWarning.contentCriteria.contains_links.rule}">
+						<xen:disabled>
+							<xen:spinbox name="content_criteria[contains_links][data][links]" value="{$autoWarning.contentCriteria.contains_links.data.links}" size="5" />
+						</xen:disabled>
+					</xen:option>
+					<xen:option name="content_criteria[contains_uppercase][rule]" value="contains_uppercase" label="{xen:phrase th_content_contains_at_least_x_percent_uppercase_autowarning}:" selected="{$autoWarning.contentCriteria.contains_uppercase.rule}">
+						<xen:disabled>
+							<xen:spinbox name="content_criteria[contains_uppercase][data][percent]" value="{$autoWarning.contentCriteria.contains_uppercase.data.percent}" size="5" />
+						</xen:disabled>
+					</xen:option>
+					<xen:html>
+						<ul>
+							<li><label for="ctrl_content_criteriacontains_wordsrule_contains_words"><input type="checkbox" name="content_criteria[contains_words][rule]" value="contains_words" class="Disabler" id="ctrl_content_criteriacontains_wordsrule_contains_words" {xen:checked {$autoWarning.contentCriteria.contains_words}} /> {xen:phrase th_content_contains_specific_words_autowarning}:</label>
+								<ul id="ctrl_content_criteriacontains_wordsrule_contains_words_Disabler">
+								<xen:set var="$counter">0</xen:set>
+									<xen:if is="{$autoWarning.contentCriteria.contains_words.data.words}">
+										<xen:foreach loop="$autoWarning.contentCriteria.contains_words.data.words" i="$counter" value="$choice">
+											<xen:if is="{$choice.word}">
+												<li>
+													<xen:textbox name="content_criteria[contains_words][data][words][{xen:calc '{$counter}-1'}][word]" value="{$choice.word}" placeholder="{xen:phrase word_or_phrase}" size="20" />
+													<input type="checkbox" name="content_criteria[contains_words][data][words][{xen:calc '{$counter}-1'}][exact]" value="1" {xen:checked {$choice.exact}} /> {xen:phrase match_exact_word}
+												</li>
+											</xen:if>
+										</xen:foreach>
+									</xen:if>
+			
+									<li class="ContentCriteriaWordOptionListener">
+										<xen:textbox name="content_criteria[contains_words][data][words][{$counter}][word]" value="" placeholder="{xen:phrase word_or_phrase}" size="20" />
+										<input type="checkbox" name="content_criteria[contains_words][data][words][{$counter}][exact]" value="1" checked="checked" /> {xen:phrase match_exact_word}
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</xen:html>
+				</xen:checkboxunit>
+			</fieldset>
+		</li>
+		<li><xen:include template="helper_criteria_user" /></li>
+		<li><xen:include template="helper_criteria_user_field" /></li>
+
+	</ul>
+
+	<xen:submitunit save="{xen:phrase th_save_automatic_warning_autowarning}">
+		<xen:if is="{$autoWarning.auto_warning_id}">
+			<input type="button" value="{xen:phrase th_delete_auto_warning_autowarning}..." accesskey="d" class="button OverlayTrigger"
+				data-href="{xen:adminlink warnings/auto/delete, $autoWarning}" />
+		</xen:if>
+	</xen:submitunit>
+
+</xen:form>]]></template>
+    <template title="th_auto_warning_delete_autowarning"><![CDATA[<xen:title>{xen:phrase th_confirm_deletion_of_auto_warning_autowarning}</xen:title>
+
+<xen:require css="delete_confirmation.css" />
+
+<xen:form action="{xen:adminlink 'warnings/auto/delete', $autoWarning}" class="deleteConfirmForm formOverlay">
+
+	<p>{xen:phrase th_please_confirm_want_to_delete_following_auto_warning_autowarning}:</p>
+	<strong><a href="{xen:adminlink 'warnings/auto/edit', $autoWarning}">{$autoWarning.title}</a></strong>
+
+	<xen:submitunit save="{xen:phrase th_delete_auto_warning_autowarning}" />
+	<input type="hidden" name="_xfConfirm" value="1" />
+	
+</xen:form>]]></template>
+    <template title="th_topctrl_autowarning"><![CDATA[<a href="{xen:adminlink warnings/auto/add}" class="button">+ {xen:phrase th_create_new_auto_warning_autowarning}</a>]]></template>
+    <template title="th_warning_list_autowarning"><![CDATA[<xen:if is="{$autoWarnings}">
+	<xen:form action="{xen:adminlink warnings}" class="section">
+		<h2 class="subHeading">
+			{xen:phrase th_automatic_warnings_autowarning}
+		</h2>
+	
+		<ol class="FilterList Scrollable">
+			<xen:foreach loop="$autoWarnings" value="$autoWarning">
+				<xen:listitem
+					id="auto-{$autoWarning.auto_warning_id}"
+					label="{$autoWarning.title}"
+					href="{xen:adminlink warnings/auto/edit, $autoWarning}"
+					delete="{xen:adminlink warnings/auto/delete, $autoWarning}"
+				>
+					<xen:snippet>
+						{xen:if "{$action.action} == 'ban_length'", '{xen:phrase banned_for_period}',
+							{xen:if "{$action.action} == 'ban_points'", '{xen:phrase banned_while_above_points_threshold}',
+							{xen:if "{$action.action} == 'discourage'", '{xen:phrase discouraged_while_above_points_threshold}',
+							{xen:if "{$action.action} == 'groups'", '{xen:phrase added_to_selected_groups_while_above_points_threshold}'}
+						}}}
+					</xen:snippet>
+				</xen:listitem>
+			</xen:foreach>
+		</ol>
+	</xen:form>
+</xen:if>]]></template>
+  </admin_templates>
+  <admin_template_modifications>
+    <modification template="warning_list" modification_key="th_autoWarning_warningList" description="Adds list of automatic warnings ana a button to create an automatic warning to the warnings page." execution_order="10" enabled="1" action="preg_replace">
+      <find><![CDATA[#</xen:topctrl>.*#s]]></find>
+      <replace><![CDATA[<xen:include template="th_topctrl_autowarning" />
+${0}
+<xen:include template="th_warning_list_autowarning" />]]></replace>
+    </modification>
+  </admin_template_modifications>
+  <code_events/>
+  <code_event_listeners>
+    <listener event_id="controller_pre_dispatch" execute_order="10" callback_class="ThemeHouse_Listener_ControllerPreDispatch" callback_method="controllerPreDispatch" active="1" hint="" description=""/>
+    <listener event_id="file_health_check" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_FileHealthCheck" callback_method="fileHealthCheck" active="1" hint="" description=""/>
+    <listener event_id="init_dependencies" execute_order="10" callback_class="ThemeHouse_Listener_InitDependencies" callback_method="initDependencies" active="1" hint="" description=""/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassController" active="0" hint="XenForo_ControllerAdmin_Warning" description="XenForo_ControllerAdmin_Warning (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassRoutePrefix" active="0" hint="XenForo_Route_PrefixAdmin_Warnings" description="XenForo_Route_PrefixAdmin_Warnings (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassModel" active="0" hint="XenForo_Model_Warning" description="XenForo_Model_Warning (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassDataWriter" active="0" hint="XenForo_DataWriter_DiscussionMessage_Post" description="XenForo_DataWriter_DiscussionMessage_Post (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassDataWriter" active="0" hint="XenForo_DataWriter_DiscussionMessage_ProfilePost" description="XenForo_DataWriter_DiscussionMessage_ProfilePost (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassDataWriter" active="0" hint="XenForo_DataWriter_Warning" description="XenForo_DataWriter_Warning (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class_controller" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassController" active="1" hint="" description="(For XenForo 1.1 and below)" compatibility_switch="1"/>
+    <listener event_id="load_class_datawriter" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassDataWriter" active="1" hint="" description="(For XenForo 1.1 and below)" compatibility_switch="1"/>
+    <listener event_id="load_class_model" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassModel" active="1" hint="" description="(For XenForo 1.1 and below)" compatibility_switch="1"/>
+    <listener event_id="load_class_route_prefix" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_LoadClass" callback_method="loadClassRoutePrefix" active="1" hint="" description="(For XenForo 1.1 and below)" compatibility_switch="1"/>
+    <listener event_id="template_post_render" execute_order="10" callback_class="ThemeHouse_AutoWarning_Listener_TemplatePostRender" callback_method="templatePostRender" active="1" hint="" description="" compatibility_switch="1"/>
+  </code_event_listeners>
+  <cron>
+    <entry entry_id="thAutoWarning" cron_class="ThemeHouse_AutoWarning_CronEntry_AutoWarning" cron_method="processAutoWarnings" active="1"><![CDATA[{"day_type":"dom","dom":["-1"],"hours":["-1"],"minutes":["45"]}]]></entry>
+  </cron>
+  <email_templates/>
+  <email_template_modifications/>
+  <optiongroups>
+    <group group_id="th_autoWarning" display_order="2000" debug_only="0"/>
+    <option option_id="th_autoWarning_removeQuotes" edit_format="onoff" data_type="boolean" can_backup="1">
+      <default_value>0</default_value>
+      <edit_format_params/>
+      <sub_options/>
+      <relation group_id="th_autoWarning" display_order="1"/>
+    </option>
+  </optiongroups>
+  <permissions>
+    <permission_groups/>
+    <permissions>
+      <permission permission_group_id="general" permission_id="bypassAutoWarningCheck" permission_type="flag" default_value="unset" interface_group_id="generalPermissions" display_order="10000"/>
+    </permissions>
+    <interface_groups/>
+  </permissions>
+  <phrases>
+    <phrase title="cron_entry_thAutoWarning" version_id="1370999664" version_string="1.0.0"><![CDATA[Process Automatic Warnings]]></phrase>
+    <phrase title="option_group_th_autoWarning" version_id="1371217192" version_string="1.0.2"><![CDATA[Automatic Warnings by ThemeHouse]]></phrase>
+    <phrase title="option_group_th_autoWarning_description" version_id="1371217192" version_string="1.0.2"><![CDATA[Options for the Automatic Warnings by ThemeHouse add-on.]]></phrase>
+    <phrase title="option_th_autoWarning_removeQuotes" version_id="1371217192" version_string="1.0.2"><![CDATA[Remove quotes before text checks]]></phrase>
+    <phrase title="option_th_autoWarning_removeQuotes_explain" version_id="1371217192" version_string="1.0.2"><![CDATA[Selecting this option will mean that text that has been quoted will not be checked when automatically giving warnings. Note that this will not actually check that text within [quote] tags is a direct quote of some other content.]]></phrase>
+    <phrase title="permission_general_bypassAutoWarningCheck" version_id="1370999664" version_string="1.0.0"><![CDATA[Bypass automatic warning check]]></phrase>
+    <phrase title="th_apply_to_content_types_autowarning" version_id="0" version_string="1.0.0"><![CDATA[Apply to Content Types]]></phrase>
+    <phrase title="th_automatic_warnings_autowarning" version_id="0" version_string="1.0.0"><![CDATA[Automatic Warnings]]></phrase>
+    <phrase title="th_confirm_deletion_of_auto_warning_autowarning" version_id="1370999664" version_string="1.0.0"><![CDATA[Confirm Deletion of Automatic Warning]]></phrase>
+    <phrase title="th_content_contains_at_least_x_links_autowarning" version_id="1371064086" version_string="1.0.0"><![CDATA[Content contains at least X links]]></phrase>
+    <phrase title="th_content_contains_at_least_x_percent_uppercase_autowarning" version_id="1371122899" version_string="1.0.1"><![CDATA[Content contains at least X percent uppercase letters]]></phrase>
+    <phrase title="th_content_contains_specific_words_autowarning" version_id="0" version_string="1.0.0"><![CDATA[Content contains specific words]]></phrase>
+    <phrase title="th_create_new_automatic_warning_autowarning" version_id="0" version_string="1.0.0"><![CDATA[Create New Automatic Warning]]></phrase>
+    <phrase title="th_create_new_auto_warning_autowarning" version_id="0" version_string="1.0.0"><![CDATA[Create New Auto Warning]]></phrase>
+    <phrase title="th_delete_auto_warning_autowarning" version_id="1370999664" version_string="1.0.0"><![CDATA[Delete Automatic Warning]]></phrase>
+    <phrase title="th_edit_automatic_warning_autowarning" version_id="0" version_string="1.0.0"><![CDATA[Edit Automatic Warning]]></phrase>
+    <phrase title="th_please_confirm_want_to_delete_following_auto_warning_autowarning" version_id="1370999664" version_string="1.0.0"><![CDATA[Please confirm that you want to delete the following automatic warning]]></phrase>
+    <phrase title="th_requested_auto_warning_not_found_autowarning" version_id="0" version_string="1.0.0"><![CDATA[The requested automatic warning could not be found.]]></phrase>
+    <phrase title="th_save_automatic_warning_autowarning" version_id="0" version_string="1.0.0"><![CDATA[Save Automatic Warning]]></phrase>
+    <phrase title="th_text_criteria_autowarning" version_id="1371081125" version_string="1.0.1"><![CDATA[Text Criteria]]></phrase>
+    <phrase title="th_warn_as_user_autowarning" version_id="0" version_string="1.0.0"><![CDATA[Warn as User]]></phrase>
+  </phrases>
+  <route_prefixes/>
+  <style_properties/>
+  <templates/>
+  <public_template_modifications>
+    <modification template="footer" modification_key="th_copyrightNotice_autoWarning" description="Copyright notice for [⌂] Automatic Warnings" execution_order="1" enabled="1" action="callback">
+      <find><![CDATA[/{xen:phrase (?:xenforo|extra)_copyright}/]]></find>
+      <replace><![CDATA[ThemeHouse_Listener_InitDependencies::copyrightNotice]]></replace>
+    </modification>
+  </public_template_modifications>
+  <bb_code_media_sites/>
+  <bb_codes/>
+</addon>
